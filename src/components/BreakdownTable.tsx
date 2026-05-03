@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { formatGBPPrecise, lightenHex } from '@/lib/formatting'
+import { formatGBPPrecise } from '@/lib/formatting'
 import type { DailySnapshot, IntegrationConfig } from '@/lib/sheets'
 
 interface Props {
@@ -20,12 +20,7 @@ function groupBySection(config: IntegrationConfig[]): SectionGroup[] {
   for (const c of config) {
     const existing = groups.find((g) => g.label === c.sectionLabel)
     if (existing) existing.rows.push(c)
-    else
-      groups.push({
-        label: c.sectionLabel,
-        colour: c.colour,
-        rows: [c],
-      })
+    else groups.push({ label: c.sectionLabel, colour: c.colour, rows: [c] })
   }
   return groups
 }
@@ -33,13 +28,7 @@ function groupBySection(config: IntegrationConfig[]): SectionGroup[] {
 const SPARK_W = 96
 const SPARK_H = 28
 
-function Sparkline({
-  values,
-  stroke,
-}: {
-  values: number[]
-  stroke: string
-}) {
+function Sparkline({ values, stroke }: { values: number[]; stroke: string }) {
   if (values.length < 2) {
     return <svg width={SPARK_W} height={SPARK_H} aria-hidden="true" />
   }
@@ -80,10 +69,10 @@ export function BreakdownTable({ snapshots, config }: Props) {
         <CardTitle className="text-lg">Breakdown</CardTitle>
       </CardHeader>
       <CardContent className="p-0">
-        <div className="overflow-hidden rounded-b-xl">
+        <div className="overflow-hidden">
           <table className="w-full text-sm">
             <thead>
-              <tr className="text-left text-muted-foreground">
+              <tr className="text-left text-muted-foreground border-b border-border">
                 <th className="px-6 py-2 font-medium">Integration</th>
                 <th className="px-6 py-2 font-medium text-right">Current</th>
                 <th className="px-6 py-2 font-medium text-right w-[120px]">
@@ -92,20 +81,14 @@ export function BreakdownTable({ snapshots, config }: Props) {
               </tr>
             </thead>
             <tbody>
-              {groups.map((group) => {
-                const headerBg = group.colour
-                const rowBg = lightenHex(group.colour, 0.85)
-                return (
-                  <RenderGroup
-                    key={group.label}
-                    group={group}
-                    headerBg={headerBg}
-                    rowBg={rowBg}
-                    latestRow={latest}
-                    last90={last90}
-                  />
-                )
-              })}
+              {groups.map((group) => (
+                <RenderGroup
+                  key={group.label}
+                  group={group}
+                  latestRow={latest}
+                  last90={last90}
+                />
+              ))}
             </tbody>
           </table>
         </div>
@@ -116,14 +99,10 @@ export function BreakdownTable({ snapshots, config }: Props) {
 
 function RenderGroup({
   group,
-  headerBg,
-  rowBg,
   latestRow,
   last90,
 }: {
   group: SectionGroup
-  headerBg: string
-  rowBg: string
   latestRow: DailySnapshot
   last90: DailySnapshot[]
 }) {
@@ -134,32 +113,39 @@ function RenderGroup({
 
   return (
     <>
-      <tr style={{ backgroundColor: headerBg }}>
+      <tr className="bg-muted/40 border-y border-border">
         <td
           colSpan={2}
-          className="px-6 py-2 font-semibold text-sm text-slate-900"
+          className="px-6 py-2 font-semibold text-foreground relative"
         >
+          <span
+            aria-hidden="true"
+            className="absolute left-0 top-0 bottom-0 w-1"
+            style={{ backgroundColor: group.colour }}
+          />
           {group.label}
         </td>
-        <td
-          className="px-6 py-2 text-right font-semibold text-sm text-slate-900"
-        >
+        <td className="px-6 py-2 text-right font-semibold tabular-nums text-foreground">
           {formatGBPPrecise(subtotal)}
         </td>
       </tr>
       {group.rows.map((row) => {
         const value = latestRow.integrations[row.label] ?? 0
-        const sparkValues = last90.map(
-          (s) => s.integrations[row.label] ?? 0,
-        )
+        const sparkValues = last90.map((s) => s.integrations[row.label] ?? 0)
         return (
           <tr
             key={row.label}
-            style={{ backgroundColor: rowBg }}
-            className="border-b border-black/5"
+            className="border-b border-border/50 hover:bg-accent/30"
           >
-            <td className="px-6 py-2 text-slate-800">{row.label}</td>
-            <td className="px-6 py-2 text-right tabular-nums text-slate-800">
+            <td className="px-6 py-2 text-foreground/90 flex items-center gap-2">
+              <span
+                aria-hidden="true"
+                className="inline-block size-2 rounded-full shrink-0"
+                style={{ backgroundColor: row.colour }}
+              />
+              {row.label}
+            </td>
+            <td className="px-6 py-2 text-right tabular-nums text-foreground/90">
               {formatGBPPrecise(value)}
             </td>
             <td className="px-6 py-2 text-right">

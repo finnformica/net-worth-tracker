@@ -61,7 +61,7 @@ function App() {
 
   if (!isAuthenticated) {
     return (
-      <div className="dark min-h-svh bg-background text-foreground">
+      <div className="min-h-svh bg-background text-foreground">
         <SignIn gsiReady={gsiReady} authError={authError} onSignIn={signIn} />
       </div>
     )
@@ -70,7 +70,7 @@ function App() {
   const lastUpdated = data?.snapshots.at(-1)?.date
 
   return (
-    <div className="dark min-h-svh bg-background text-foreground">
+    <div className="min-h-svh bg-background text-foreground">
       <main className="mx-auto max-w-7xl px-6 py-8 space-y-8">
         <header className="flex items-start justify-between gap-4">
           <div>
